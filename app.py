@@ -6,7 +6,7 @@ from streamlit_folium import st_folium
 import plotly.express as px
 import os
 # =========================
-# 1. CONFIG & SETTING
+# CONFIG & SETTING
 # =========================
 st.set_page_config(
     page_title="Analisis WiFi Jawa Barat",
@@ -14,21 +14,19 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS: Sidebar Hijau (#86de6f) dengan Teks Putih
-# Hapus huruf 'f' di depan kutip tiga untuk menghindari SyntaxError
 st.markdown("""
     <style>
-    /* Background Sidebar Hijau */
+    /* Background*/
     [data-testid="stSidebar"] {
         background-color: #6dbc59;
     }
 
-    /* Hilangkan padding atas agar benar-benar mepet */
+    /* Hilangkan padding */
     [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
         padding-top: 1rem;
     }
 
-    /* Container Header Sidebar (FLEXBOX agar sejajar) */
+    /* Container Header Sidebar*/
     .sidebar-header {
         display: flex;
         align-items: center; /* Sejajar secara vertikal */
@@ -40,13 +38,13 @@ st.markdown("""
         font-size: 1.3rem;
     }
 
-    /* Styling Icon WiFi Putih */
+    /* Styling Icon*/
     .wifi-icon {
         font-size: 2.8rem;
         filter: brightness(0) invert(1); /* Trik memaksa icon jadi putih */
     }
 
-    /* Styling Teks Judul Putih */
+    /* Styling Teks*/
     .sidebar-title {
         color: white !important;
         font-size: 1.2rem;
@@ -54,14 +52,14 @@ st.markdown("""
         text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
     }
 
-    /* Menu Navigasi (Radio) Teks Putih */
+    /* Menu Navigasi*/
     [data-testid="stSidebar"] .stRadio label p {
         color: #ffffff !important;
         font-weight: 500;
         font-size: 16px;
     }
     
-    /* Garis pembatas tipis putih */
+    /* Garis pembatas*/
     hr {
         border: 0.5px solid rgba(255,255,255,0.3) !important;
     }
@@ -69,7 +67,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # =========================
-# 2. DATA LOADING & CLEANING
+# DATA LOADING & CLEANING
 # =========================
 @st.cache_data
 def load_data():
@@ -104,7 +102,7 @@ def load_data():
 wifi_df, penduduk_df = load_data()
 
 # =========================
-# 3. SIDEBAR (LOGO & NAMA SEJAJAR)
+# SIDEBAR
 # =========================
 st.sidebar.markdown("""
     <div class="sidebar-header">
@@ -129,20 +127,17 @@ menu = st.sidebar.radio(
 )
 
 # =========================================================
-# MENU 0 — DASHBOARD
+# MENU DASHBOARD
 # =========================================================
 if menu == "🏠 Beranda":
     st.title("📊 Sistem Informasi Geografis WiFi Publik Jabar")
-    
-    # Sub-judul yang lebih santai
     st.subheader("Meninjau Ketersediaan Internet Gratis untuk Masyarakat")
     
-    # HITUNG DATA SECARA OTOMATIS
+    # Hitung data
     total_wifi = len(wifi_df)
     total_kota = wifi_df['kota_kabupaten'].nunique()
     total_kecamatan = wifi_df['kecamatan'].nunique()
 
-    # TAMPILKAN METRIK
     col1, col2, col3= st.columns(3)
     col1.metric("Total Titik WiFi", f"{total_wifi} Titik")
     col2.metric("Total Kota/Kab", f"{total_kota}")
@@ -150,9 +145,7 @@ if menu == "🏠 Beranda":
 
     st.divider()
 
-    # Penjelasan Fitur (Semua Menu)
     st.markdown("### 🔍 Apa yang dapat Anda temukan di sini?")
-    
     left_col, right_col = st.columns(2)
     with left_col:
         st.markdown("""
@@ -183,7 +176,7 @@ if menu == "🏠 Beranda":
     informasi ini tetap dapat memberikan gambaran mengenai pola sebaran WiFi publik di Jawa Barat.
     """)
 # =========================================================
-# MENU 1 — JUMLAH WIFI PER KOTA
+# MENU JUMLAH WIFI PER KOTA
 # =========================================================
 elif menu == "📶 Data Titik WiFi":
     st.title("📋 Data Titik WiFi Publik")
@@ -196,7 +189,6 @@ elif menu == "📶 Data Titik WiFi":
     # Proses filtering data
     filtered_wifi = wifi_df if selected_kota == "Semua" else wifi_df[wifi_df['kota_kabupaten'] == selected_kota]
 
-    # Menggunakan TAB
     tab_ringkasan, tab_detail = st.tabs(["📊 Ringkasan Data", "📋 Detail Lokasi"])
 
     with tab_ringkasan:
@@ -226,23 +218,19 @@ elif menu == "📶 Data Titik WiFi":
         mime='text/csv',
     )
 # =========================================================
-# MENU 2 — DATA PENDUDUK PER KOTA
+# MENU DATA PENDUDUK PER KOTA
 # =========================================================
 elif menu == "👥 Data Penduduk":
-    st.title("👥 Data Demografi Penduduk")
+    st.title("👥 Data Penduduk")
     
-    # --- PROSES MEMBERSIHKAN DATA (HAPUS .00 & FORMAT TITIK) ---
-    # 1. Buang bagian desimal .00 agar angka jadi bulat
+    # clean desimal
     penduduk_df['jumlah_penduduk'] = (
         penduduk_df['jumlah_penduduk']
         .astype(str)
         .str.split('.').str[0] 
         .str.replace(r'[^\d]', '', regex=True)
     )
-    
-    # 2. Ubah ke angka bulat (int) agar bisa muncul pemisah titik di tabel
     penduduk_df['jumlah_penduduk'] = pd.to_numeric(penduduk_df['jumlah_penduduk'], errors='coerce').fillna(0).astype(int)
-    # ---------------------------------------------------------
 
     # Filter Wilayah
     list_kota_pop = ["Semua"] + sorted(penduduk_df['kota_kabupaten'].unique().tolist())
@@ -250,10 +238,8 @@ elif menu == "👥 Data Penduduk":
     
     filtered_pop = penduduk_df if selected_kota_pop == "Semua" else penduduk_df[penduduk_df['kota_kabupaten'] == selected_kota_pop]
 
-    # TAMPILAN TABEL (Langsung tabel tanpa metrik di atasnya)
+    # tampilkan tabel
     st.subheader(f"Tabel Populasi: {selected_kota_pop}")
-    
-    # Pilih kolom yang mau ditampilkan sesuai CSV kamu
     display_pop = filtered_pop[["kota_kabupaten", "jumlah_penduduk", "satuan", "tahun"]].copy()
 
     st.dataframe(
@@ -263,7 +249,7 @@ elif menu == "👥 Data Penduduk":
         column_config={
             "jumlah_penduduk": st.column_config.NumberColumn(
                 "Jumlah Penduduk",
-                format="%d", # Otomatis kasih titik sebagai pemisah ribuan
+                format="%d",
             ),
             "satuan": "Satuan",
             "kota_kabupaten": "Kota/Kabupaten",
@@ -271,7 +257,7 @@ elif menu == "👥 Data Penduduk":
         }
     )
     
-    # Tombol Download
+    # fitur download
     csv_pop = display_pop.to_csv(index=False).encode('utf-8')
     st.download_button(
         label="📥 Download Data Penduduk (CSV)", 
@@ -280,12 +266,11 @@ elif menu == "👥 Data Penduduk":
     )
 
 # =========================================================
-# MENU 3 — VISUALISASI & GRAFIK
+# MENU VISUALISASI & GRAFIK
 # =========================================================
 elif menu == "📊 Visualisasi & Grafik":
     st.header("📈 Visualisasi Perbandingan WiFi Jawa Barat")
     
-    # Menyiapkan data untuk grafik
     wifi_counts = wifi_df.groupby("kota_kabupaten").size().reset_index(name="jumlah_wifi")
     merged_viz = pd.merge(wifi_counts, penduduk_df, on="kota_kabupaten")
     
@@ -303,13 +288,11 @@ elif menu == "📊 Visualisasi & Grafik":
         
         st.plotly_chart(fig1, use_container_width=True)
         
-        # Penjelasan untuk orang awam
         st.info("""
         **🔍 Cara Membaca Grafik Peringkat:**
-        * Grafik ini menunjukkan **siapa yang punya 'stok' WiFi paling banyak**. 
-        * Semakin panjang batang ke arah kanan, berarti Pemerintah Daerah tersebut sudah memasang lebih banyak titik WiFi gratis untuk warga.
+        * Grafik ini menunjukkan daerah dengan titik wifi terbanyak hingga tersedikit.
         * **Warna Kuning/Terang:** Wilayah dengan fasilitas WiFi paling melimpah.
-        * **Warna Ungu/Gelap:** Wilayah yang jumlah titik WiFi-nya masih sedikit.
+        * **Warna Ungu/Gelap:** Wilayah yang jumlah titik WiFi masih sedikit.
         """)
 
     with tab2:
@@ -323,28 +306,20 @@ elif menu == "📊 Visualisasi & Grafik":
         
         st.plotly_chart(fig2, use_container_width=True)
         
-        # Penjelasan untuk orang awam
         st.warning("""
         **🔍 Cara Membaca Grafik Korelasi:**
-        Grafik ini memberi tahu kita: **"Apakah jumlah WiFi sudah adil jika dibanding jumlah orangnya?"**
         
         * **Semakin ke Kanan:** Jumlah penduduknya semakin padat.
-        * **Semakin ke Atas:** Jumlah titik WiFi-nya semakin banyak.
-        
-        **Tanda Bahaya (🚨):** Jika ada nama kota yang posisinya **sangat ke kanan tapi rendah (di bawah)**, artinya kota tersebut sedang "Krisis Digital". Penduduknya jutaan, tapi titik WiFi-nya sangat sedikit. Idealnya, kota-kota harus berada di garis diagonal (semakin banyak penduduk, semakin banyak WiFi).
-        """)
+        * **Semakin ke Atas:** Jumlah titik WiFi-nya semakin banyak.""")
 
 # =========================================================
-# MENU 4 — ANALISI RASIO
+# MENU ANALISI RASIO
 # =========================================================
 elif menu == "📈 Analisis Rasio":
     st.title("📊 Analisis Pemerataan WiFi Publik")
     st.markdown("""
-    Analisis ini mengukur perbandingan jumlah titik WiFi dengan populasi penduduk (per 100.000 jiwa).
-    Pembagian warna membantu mengidentifikasi wilayah mana yang sudah cukup atau masih kurang.
-    """)
+    Analisis ini mengukur perbandingan jumlah titik WiFi dengan populasi penduduk (per 100.000 jiwa).""")
 
-    # --- 1. PROSES DATA ---
     wifi_counts = wifi_df.groupby("kota_kabupaten").size().reset_index(name="jumlah_wifi")
     
     penduduk_clean = penduduk_df.copy()
@@ -359,10 +334,8 @@ elif menu == "📈 Analisis Rasio":
     analisis_df = pd.merge(penduduk_clean, wifi_counts, on="kota_kabupaten", how="left")
     analisis_df["jumlah_wifi"] = analisis_df["jumlah_wifi"].fillna(0).astype(int)
     
-    # Rasio per 100.000 Penduduk
+    # hitung rasio
     analisis_df["rasio"] = (analisis_df["jumlah_wifi"] / analisis_df["jumlah_penduduk"].replace(0, 1)) * 100000
-    
-    # --- 2. KATEGORI WARNA (Lebih Banyak Tingkatan) ---
     def kategori_warna_profesional(r):
         if r == 0:
             return "🔴 Sangat Rendah"
@@ -377,7 +350,6 @@ elif menu == "📈 Analisis Rasio":
 
     analisis_df["status"] = analisis_df["rasio"].apply(kategori_warna_profesional)
 
-    # --- 3. TAMPILAN TABEL ---
     st.subheader("Hasil Analisis Wilayah")
     
     st.dataframe(
@@ -396,7 +368,6 @@ elif menu == "📈 Analisis Rasio":
 
     st.divider()
 
-    # --- 4. LEGENDA WARNA ---
     st.markdown("""
     **Keterangan Warna:**
     * 🟢 **Sangat Baik**: Ketersediaan WiFi sangat melimpah dibanding jumlah warga.
@@ -406,10 +377,9 @@ elif menu == "📈 Analisis Rasio":
     * 🔴 **Sangat Rendah**: Wilayah prioritas utama (belum ada data WiFi).
     """)
 # =========================================================
-# MENU 5 — MAP (KODE ASLI KAMU - TIDAK DIUBAH)
+# MENU MAP
 # =========================================================
 elif menu == "🗺️ Peta Persebaran WiFi":
-    # --- FUNGSI PEMBANTU ---
     def format_id_pop(val):
         try:
             v = str(val).split('.')[0]
@@ -418,7 +388,7 @@ elif menu == "🗺️ Peta Persebaran WiFi":
         except:
             return "0"
 
-    # HTML Templates (Tetap sama seperti aslimu)
+    #poup
     def get_kota_popup_html(row):
         pop_formatted = format_id_pop(row['jumlah_penduduk'])
         return f"""
@@ -444,17 +414,15 @@ elif menu == "🗺️ Peta Persebaran WiFi":
 
     st.title("🌐 Peta Monitoring WiFi Jawa Barat")
     
-    # --- OPTIMASI LOADING: Gunakan st.cache_data untuk Merge & Agg ---
     @st.cache_data
     def prepare_map_data(wifi_df, penduduk_df):
-        # Merge hanya kolom yang diperlukan saja
         df_res = pd.merge(
             wifi_df, 
             penduduk_df[['kota_kabupaten', 'jumlah_penduduk']], 
             on='kota_kabupaten', 
             how='left'
         )
-        # Agregasi Kota
+
         agg = df_res.groupby('kota_kabupaten').agg({
             'lat_kot_clean': 'first', 
             'lon_kot_clean': 'first',
@@ -464,19 +432,17 @@ elif menu == "🗺️ Peta Persebaran WiFi":
         }).rename(columns={'kecamatan': 'kecamatan_count', 'id_wifi': 'id_wifi_count'}).reset_index()
         return df_res, agg
 
-    # Jalankan persiapan data (Hanya lari sekali, selanjutnya instan)
     df_map, kota_agg = prepare_map_data(wifi_df, penduduk_df)
 
     # Inisialisasi Peta
     m = folium.Map(location=[-6.9175, 107.6191], zoom_start=8, tiles='OpenStreetMap')
     main_cluster = MarkerCluster(spiderfy_on_max_zoom=True).add_to(m)
 
-    # Looping Utama
     for _, row in kota_agg.iterrows():
         sub_group = FeatureGroupSubGroup(main_cluster, row['kota_kabupaten'])
         m.add_child(sub_group)
         
-        # Marker Kota (Gunakan Marker biasa)
+        # Marker Kota
         folium.Marker(
             location=[row['lat_kot_clean'], row['lon_kot_clean']],
             popup=folium.Popup(get_kota_popup_html(row), max_width=300),
@@ -487,7 +453,6 @@ elif menu == "🗺️ Peta Persebaran WiFi":
         # Marker Kecamatan
         df_kec = df_map[df_map['kota_kabupaten'] == row['kota_kabupaten']]
         for _, kec_row in df_kec.iterrows():
-            # CircleMarker lebih ringan daripada Marker Icon untuk ribuan titik
             folium.CircleMarker(
                 location=[kec_row['lat_kec_clean'], kec_row['lon_kec_clean']],
                 radius=5, color='#d32f2f', fill=True, fill_color='#f44336', fill_opacity=0.7,
@@ -497,16 +462,16 @@ elif menu == "🗺️ Peta Persebaran WiFi":
     folium.LayerControl().add_to(m)
     st_folium(m, width="100%", height=700, returned_objects=[])
 # =========================================================
-# MENU 6 — REKOMENDASI
+# MENU REKOMENDASI
 # =========================================================
 elif menu == "💡 Saran Pengembangan":
     st.header("💡 Rekomendasi Prioritas Pemerataan")
     wifi_counts = wifi_df.groupby("kota_kabupaten").size().reset_index(name="jumlah_wifi")
     rec_df = pd.merge(penduduk_df, wifi_counts, on="kota_kabupaten", how="left").fillna(0)
     rec_df["rasio"] = (rec_df["jumlah_wifi"] / rec_df["jumlah_penduduk_numeric"]) * 100000
-    prioritas = rec_df.sort_values("rasio").head(5)
+    prioritas = rec_df.sort_values("rasio").head(8)
     
-    st.warning("### ⚠️ Wilayah Prioritas Penambahan WiFi")
+    st.warning("⚠️ Wilayah Prioritas Penambahan WiFi")
     for i, row in prioritas.iterrows():
         with st.expander(f"📍 {row['kota_kabupaten']}"):
             st.write(f"**Populasi:** {row['jumlah_penduduk_numeric']:,} Jiwa")
